@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>감정 분석 · 마음온(心)</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix/dist/chartjs-chart-matrix.min.js"></script>
+  <style>
+    :root { --bg-color: #ffffff; --text-color: #1f2937; --muted-color: #6b7280; --border-color: #e5e7eb; }
+    body { margin: 0; background-color: var(--bg-color); color: var(--text-color); font-family: 'Pretendard', sans-serif; }
+    .wrap { max-width: 1024px; margin: 40px auto; padding: 0 16px; }
+    .header-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    h1 { font-size: 32px; margin: 0 0 8px; }
+    .subtitle { color: var(--muted-color); }
+    .card { background-color: #f9fafb; border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+    .chart-container { position: relative; width: 100%; height: 70vh; }
+    button { padding: 0 20px; cursor: pointer; border: none; border-radius: 12px; font-size: 14px; font-weight: 500; background-color: #e5e7eb; color: #374151; height: 40px; }
+    .description { margin-top: 1.5rem; line-height: 1.7; background-color: #eff6ff; padding: 1rem; border-radius: 8px; border-left: 4px solid #3b82f6;}
+    .empty-state { text-align: center; padding: 4rem 2rem; }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="wrap">
+    <div class="header-bar">
+      <div><h1>감정 분석</h1><div class="subtitle">이번 상담에서 함께 나타난 감정들을 시각화합니다.</div></div>
+      <div><button type="button" onclick="location.href='/chatbot'">상담 계속하기</button></div>
+    </div>
+    
+    <div class="card">
+      {% if analysis_data %}
+        <div class="chart-container">
+          <canvas id="emotionHeatmap"></canvas>
+        </div>
+        <div class="description">
+          <h3 class="text-lg font-semibold">감정 연관성 히트맵이란?</h3>
+          <p>이 표는 사용자의 메시지에서 어떤 감정들이 함께 나타나는 경향이 있는지를 보여줍니다. 가로축과 세로축은 모두 7가지 감정을 나타내며, 두 감정이 교차하는 칸의 <strong>색상이 진할수록</strong> 해당 감정들이 더 자주 동시에 감지되었음을 의미합니다.</p>
+        </div>
+      {% else %}
+        <div class="card empty-state">
+          <h2 class="text-xl font-semibold">분석할 대화가 없습니다.</h2>
+          <p class="text-slate-500 mt-2">챗봇과 먼저 대화를 시작해주세요.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <script>
+    const analysisData = {{ analysis_data|tojson|safe }};
+    if (analysisData) {
+      new Chart(document.getElementById('emotionHeatmap'), {
+        type: 'matrix',
+        data: {
+          datasets: [{
+            label: '감정 동시 발생 빈도',
+            data: analysisData.data,
+            backgroundColor(ctx) {
+              const value = ctx.raw ? ctx.raw.v : 0;
+              if (value === 0) return 'rgba(241, 245, 249, 0.5)';
+              
+              let max = 0;
+              for (const row of analysisData.matrix) {
+                for (const cell of row) {
+                  if (cell > max) max = cell;
+                }
+              }
+              if (max === 0) max = 1;
+              const alpha = Math.sqrt(value / max);
+              return `rgba(59, 130, 246, ${alpha})`;
+            },
+            borderColor: '#e5e7eb',
+            borderWidth: 1,
+            width: ({chart}) => ((chart.chartArea || {}).width / analysisData.labels.length) - 1,
+            height: ({chart}) => ((chart.chartArea || {}).height / analysisData.labels.length) - 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                title: () => '',
+                label: (ctx) => [
+                  `감정 1: ${ctx.raw.y}`,
+                  `감정 2: ${ctx.raw.x}`,
+                  `동시 발생: ${ctx.raw.v}회`
+                ]
+              }
+            }
+          },
+          scales: {
+            x: { type: 'category', labels: analysisData.labels, grid: { display: false } },
+            y: { type: 'category', labels: analysisData.labels, offset: true, grid: { display: false } }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <title>온숲</title>
+  <style>
+    :root { --bg-color:#ffffff; --text-color:#1f2937; --muted-color:#6b7280; --border-color:#e5e7eb; --accent-color:#3b82f6; --panel-bg:#f9fafb; --bot-bubble:#f3f4f6; --user-bubble:#dbeafe; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg-color); color:var(--text-color); font-family:'Pretendard',sans-serif; }
+    .wrap { max-width:900px; margin:40px auto; padding:0 16px; }
+
+    .header-bar { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:20px; gap:10px; flex-wrap:wrap; }
+    .btn-group { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+    h1 { font-size:32px; margin:0 0 8px; }
+    .subtitle { color:var(--muted-color); }
+
+    .card { background:var(--panel-bg); border:1px solid var(--border-color); border-radius:12px; padding:16px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); }
+
+    .grid { display:grid; grid-template-columns: 1fr 280px; gap:16px; }
+
+    /* 채팅 컬럼: 위에 채팅창, 아래에 입력폼 */
+    .chat-column {
+      display:flex;
+      flex-direction:column;
+      min-height:400px;
+      gap:8px;
+    }
+
+    .chat-window { height:65vh; overflow-y:auto; margin-bottom:4px; padding:0 10px; background:#fff; border:1px solid var(--border-color); border-radius:10px; }
+    .row { display:flex; margin-bottom:12px; gap:12px; align-items:flex-start; }
+    .avatar { width:36px; height:36px; border-radius:50%; background:#e5e7eb; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+    .msg { padding:10px 14px; border-radius:12px; line-height:1.55; max-width:80%; white-space:pre-wrap; word-break:break-word; }
+    .msg.bot { background:var(--bot-bubble); }
+    .msg.user { background:var(--user-bubble); color:#1e3a8a; margin-left:auto; }
+
+    form { display:flex; gap:8px; align-items:flex-end; }
+    textarea { flex:1; min-height:56px; padding:16px; border-radius:10px; background:#fff; border:1px solid var(--border-color); font-size:16px; }
+    button { padding:0 20px; cursor:pointer; border:none; border-radius:10px; font-weight:600; background:var(--accent-color); color:#fff; height:40px; }
+    button.secondary { background:#e5e7eb; color:#374151; font-weight:500; font-size:14px; height:40px; padding:0 16px; }
+
+    aside#emo-panel { border-left:1px solid var(--border-color); padding-left:12px; }
+    #emo-panel h3{ margin:6px 0 10px; font-size:16px; }
+    #emo-panel .rowbar{ display:flex; align-items:center; gap:8px; margin:6px 0; }
+    #emo-panel .label{ width:44px; font-size:12px; color:#475569; }
+    #emo-panel .bar{ flex:1; height:10px; background:#e5e7eb; border-radius:9999px; overflow:hidden; }
+    #emo-panel .fill{ height:100%; width:0%; background:var(--accent-color); transition: width .35s ease; }
+    #emo-panel .pct{ width:40px; text-align:right; font-size:12px; color:#334155; }
+
+    /* 모달 */
+    .modal-backdrop{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.35);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:50;
+      padding:16px;
+    }
+    .modal{
+      width:100%;
+      max-width:720px;
+      background:#fff;
+      border-radius:12px;
+      border:1px solid var(--border-color);
+      box-shadow:0 10px 30px rgba(0,0,0,.15);
+    }
+    .modal header{ padding:12px 16px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; }
+    .modal header h4{ margin:0; font-size:16px; }
+    .modal .body{ padding:14px 16px; max-height:60vh; overflow:auto; white-space:pre-wrap; }
+    .modal .footer{ padding:12px 16px; border-top:1px solid var(--border-color); display:flex; justify-content:flex-end; gap:8px; }
+
+    /* 스티커 토스트 (확대 버전) */
+    .sticker-toast{
+      position: fixed;
+      right: 24px; bottom: 26px;
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 16px;
+      background: rgba(255,255,255,.96);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      box-shadow: 0 10px 28px rgba(0,0,0,.14);
+      z-index: 60;
+      animation: stickerIn .25s ease;
+    }
+    .sticker-toast img{ width: 84px; height: 84px; object-fit: contain; }
+    .sticker-toast #sticker-caption{ font-weight: 800; color:#0f172a; font-size:18px; line-height: 1.2; }
+    @media (max-width: 520px){
+      .sticker-toast{ right: 12px; bottom: 16px; padding: 12px 14px; gap: 10px; }
+      .sticker-toast img{ width: 68px; height: 68px; }
+      .sticker-toast #sticker-caption{ font-size:16px; }
+    }
+    @keyframes stickerIn { from{ transform: translateY(8px); opacity: 0; } to{ transform: translateY(0); opacity: 1; } }
+
+    /* ===== 모바일 반응형 튜닝 ===== */
+    @media (max-width: 768px){
+      html, body {
+        height:100%;
+      }
+      body{
+        background:#f3f4f6;
+      }
+      .wrap{
+        max-width:100%;
+        margin:0;
+        padding:12px 10px 16px;
+      }
+      .header-bar{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:12px;
+        margin-bottom:12px;
+      }
+      h1{ font-size:24px; }
+      .card{
+        padding:12px;
+        border-radius:18px;
+      }
+      .grid{
+        display:flex;
+        flex-direction:column;
+        gap:16px;
+      }
+      .chat-column{
+        min-height: calc(100vh - 260px);  /* 헤더/감정패널 빼고 남은 영역 정도 */
+      }
+      .chat-window{
+        flex:1;
+        height:auto;               /* 높이 고정 대신 flex로 채우기 */
+        padding:8px 10px;
+      }
+      form{
+        margin-top:4px;
+      }
+      aside#emo-panel{
+        border-left:none;
+        border-top:1px solid var(--border-color);
+        margin-top:4px;
+        padding-left:0;
+        padding-top:12px;
+      }
+    }
+
+    @media (max-width: 640px){
+      .modal-backdrop{
+        align-items:flex-end;
+        padding:0;
+      }
+      .modal{
+        border-radius:16px 16px 0 0;
+        width:100%;
+        max-width:100%;
+      }
+      .modal .body{
+        max-height:70vh;
+      }
+      .btn-group{
+        width:100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header-bar">
+      <div>
+        <h1>온숲</h1>
+        <div class="subtitle">모든 대화는 암호화되어 안전하게 저장됩니다.</div>
+      </div>
+
+      <div class="btn-group">
+        <button type="button" class="secondary" onclick="location.href='/history'">상담 기록</button>
+        <button type="button" id="analyzeBtn">상담 내용 요약</button>
+        <button type="button" class="secondary" onclick="location.href='/reset'">대화 초기화</button>
+
+        {% if consent_ok %}
+          <form method="post" action="/consent/revoke" style="display:inline;">
+            <button type="submit" class="secondary">동의 철회</button>
+          </form>
+        {% else %}
+          <button type="button" class="secondary" onclick="openConsent()">데이터 동의</button>
+        {% endif %}
+
+        {% if session.get('auth_user_email') %}
+          <span style="color:#64748b; font-size:14px;">{{ session.get('auth_user_email') }}</span>
+          <button type="button" class="secondary" onclick="location.href='/logout'">로그아웃</button>
+        {% else %}
+          <button type="button" class="secondary" onclick="location.href='/login'">로그인</button>
+          <button type="button" class="secondary" onclick="location.href='/register'">회원가입</button>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="grid">
+        <!-- 좌: 채팅 -->
+        <div class="chat-column">
+          <div id="chat-window" class="chat-window">
+            {% if not history %}
+              <div class="row"><div class="avatar">🤖</div><div class="msg bot">안녕하세요, 온숲입니다. 어떤 이야기를 나누고 싶으신가요?</div></div>
+            {% endif %}
+            {% for m in history %}
+              {% if m.role == 'assistant' %}
+                <div class="row"><div class="avatar">🤖</div><div class="msg bot">{{ m.content }}</div></div>
+              {% else %}
+                <div class="row"><div class="msg user">{{ m.content }}</div></div>
+              {% endif %}
+            {% endfor %}
+          </div>
+
+          <form id="chat-form" method="POST" action="{{ url_for('chatbot') }}">
+            <textarea id="message-input" name="message" placeholder="하고 싶은 말을 적어주세요..." required></textarea>
+            <button type="button" id="micBtn" class="secondary" style="height:56px;">🎤 말하기</button>
+            <button type="submit" style="height:56px;">보내기</button>
+          </form>
+        </div>
+
+        <!-- 우: 실시간 감정 패널 -->
+        <aside id="emo-panel">
+          <h3>실시간 감정 분포</h3>
+          <div class="emo-row" data-emokey="놀람"></div>
+          <div class="emo-row" data-emokey="공포"></div>
+          <div class="emo-row" data-emokey="혐오"></div>
+          <div class="emo-row" data-emokey="중립"></div>
+          <div class="emo-row" data-emokey="행복"></div>
+          <div class="emo-row" data-emokey="분노"></div>
+          <div class="emo-row" data-emokey="슬픔"></div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <!-- 상담 내용 요약 모달 -->
+  <div id="summaryModal" class="modal-backdrop">
+    <div class="modal">
+      <header>
+        <h4>상담 내용 요약</h4>
+        <button class="secondary" onclick="closeSummary()">닫기</button>
+      </header>
+      <div class="body" id="summaryBody">요약을 불러오는 중...</div>
+      <div class="footer">
+        <button class="secondary" onclick="closeSummary()">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 데이터 동의 모달 -->
+  <div id="consentModal" class="modal-backdrop" style="display:none;">
+    <div class="modal">
+      <header>
+        <h4>상담 데이터 수집·이용 동의</h4>
+        <button class="secondary" onclick="closeConsent()">닫기</button>
+      </header>
+      <div class="body" style="line-height:1.6;">
+        <p>서비스 품질 개선 및 상담 기록 제공을 위해 대화 내용(텍스트)과 감정 분석 결과를 저장·처리합니다.
+        <br/>민감 정보가 포함될 수 있어 <b>명시적 동의</b>가 필요합니다.</p>
+        <ul style="padding-left:18px;">
+          <li>저장 항목: 대화 텍스트(암호화 저장), 감정 분포 로그</li>
+          <li>이용 목적: 상담 기록 제공, 요약/리포트 생성, 품질 개선</li>
+          <li>보관 기간: 서비스 이용기간 동안(언제든 철회 가능)</li>
+        </ul>
+        <form id="consentForm" method="post" action="/consent">
+          <label style="display:flex; gap:8px; align-items:center; margin-top:8px;">
+            <input type="checkbox" name="agree" id="agreeChk"/>
+            <span>위 내용을 이해하였으며, 상담 데이터 수집·이용에 동의합니다.</span>
+          </label>
+          <div class="footer" style="justify-content:flex-end; margin-top:12px;">
+            <button type="submit" id="agreeBtn" class="secondary" disabled>동의하고 시작</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 스티커(작은 그림) 토스트 -->
+  <div id="sticker-toast" class="sticker-toast" style="display:none;">
+    <img id="sticker-img" alt="sticker" />
+    <div id="sticker-caption"></div>
+  </div>
+
+  <script>
+    const EMO_KEYS = ['놀람','공포','혐오','중립','행복','분노','슬픔'];
+    const CONSENT_OK = {{ 'true' if consent_ok else 'false' }};
+    const NEED_CONSENT = {{ 'true' if need_consent else 'false' }};
+
+    function ensureRows() {
+      document.querySelectorAll('#emo-panel .emo-row').forEach(row => {
+        if (row.children.length === 0) {
+          const label = document.createElement('div'); label.className = 'label'; label.textContent = row.dataset.emokey;
+          const bar = document.createElement('div'); bar.className = 'bar';
+          const fill = document.createElement('div'); fill.className = 'fill'; bar.appendChild(fill);
+          const pct = document.createElement('div'); pct.className = 'pct'; pct.textContent = '0%';
+          const line = document.createElement('div'); line.className = 'rowbar';
+          line.appendChild(label); line.appendChild(bar); line.appendChild(pct);
+          row.appendChild(line);
+        }
+      });
+    }
+
+    async function refreshEmotionPanel() {
+      try {
+        const res = await fetch('/emotion_mix', { cache: 'no-store' });
+        const data = await res.json();
+        const emos = (data && data.emotions) ? data.emotions : {};
+        ensureRows();
+        EMO_KEYS.forEach(k => {
+          const row = document.querySelector(`#emo-panel .emo-row[data-emokey="${k}"]`);
+          if (!row) return;
+          const val = Math.max(0, Math.min(1, Number(emos[k] || 0)));
+          const pct = Math.round(val * 100);
+          const fill = row.querySelector('.fill');
+          const pctBox = row.querySelector('.pct');
+          if (fill) fill.style.width = pct + '%';
+          if (pctBox) pctBox.textContent = pct + '%';
+        });
+
+        // === 스티커 처리 ===
+        showStickerIfAny(data && data.sticker ? data.sticker : null);
+
+      } catch (e) { console.warn('emotion_mix error', e); }
+    }
+
+    // 요약 모달
+    const sModal = document.getElementById('summaryModal');
+    const bodyEl = document.getElementById('summaryBody');
+    function openSummary() { sModal.style.display = 'flex'; }
+    function closeSummary() { sModal.style.display = 'none'; }
+    async function fetchSummary() {
+      try {
+        bodyEl.textContent = '요약을 불러오는 중...';
+        openSummary();
+        const res = await fetch('/analyze_session', { method: 'POST' });
+        const data = await res.json();
+        const cleaned = (data && data.analysis ? data.analysis : '요약 결과가 없습니다.')
+                          .replace(/\*\*(.*?)\*\*/gs, '$1').replace(/__(.*?)__/gs, '$1').replace(/`(.*?)`/gs, '$1');
+        bodyEl.textContent = cleaned;
+      } catch (e) {
+        bodyEl.textContent = '요약 중 오류가 발생했습니다.';
+      }
+    }
+    document.getElementById('analyzeBtn').addEventListener('click', fetchSummary);
+
+    // 폼 전송 직후 한 번 갱신(즉시 반영 체감)
+    const form = document.getElementById('chat-form');
+    const msgBox = document.querySelector('textarea[name="message"]');
+    const sendBtn = document.querySelector('#chat-form button[type="submit"]');
+
+    if (form) {
+      form.addEventListener('submit', () => {
+        setTimeout(refreshEmotionPanel, 150);
+      });
+    }
+
+    // ✅ Enter로 전송 / Shift+Enter는 줄바꿈
+    if (msgBox && form) {
+      msgBox.addEventListener('keydown', function(event) {
+        if (event.isComposing || event.keyCode === 229) return;
+        if (event.key === 'Enter' && !event.shiftKey) {
+          event.preventDefault();
+          if (!msgBox.disabled && sendBtn && !sendBtn.disabled) {
+            form.submit();
+          }
+        }
+      });
+    }
+
+    // 데이터 동의 모달/가드
+    function openConsent(){ document.getElementById('consentModal').style.display='flex'; }
+    function closeConsent(){ document.getElementById('consentModal').style.display='none'; }
+
+    const agreeChk = document.getElementById('agreeChk');
+    const agreeBtn = document.getElementById('agreeBtn');
+    if (agreeChk && agreeBtn){
+      agreeChk.addEventListener('change', ()=> { agreeBtn.disabled = !agreeChk.checked; });
+    }
+
+    function applyConsentGuard() {
+      const on = !!CONSENT_OK;
+      if (msgBox) { msgBox.disabled = !on; msgBox.placeholder = on ? '하고 싶은 말을 적어주세요...' : '데이터 동의 후 이용할 수 있습니다.'; }
+      if (sendBtn) { sendBtn.disabled = !on; }
+      if (!on || NEED_CONSENT) openConsent();
+    }
+
+    // ---- 스티커 유틸
+    let stickerTimer = null;
+    let lastStickerKey = "";
+
+    function showStickerIfAny(st) {
+      const box = document.getElementById('sticker-toast');
+      if (!box) return;
+
+      if (!st || !st.type) { box.style.display = 'none'; return; }
+
+      const key = st.type + '::' + (st.text || '');
+      if (key === lastStickerKey) return;
+      lastStickerKey = key;
+
+      const img = document.getElementById('sticker-img');
+      const cap = document.getElementById('sticker-caption');
+
+      const MAP = {
+        cheer:   { src: '/static/stickers/cheer.png',    fallback: '🤗', text: '힘내요!'   },
+        congrats:{ src: '/static/stickers/congrats.png', fallback: '🎉', text: '축하해요!' },
+      };
+      const meta = MAP[st.type] || null;
+
+      cap.textContent = st.text || (meta ? meta.text : '');
+
+      if (meta) {
+        const testImg = new Image();
+        testImg.onload = () => { img.src = meta.src; img.style.display = 'block'; };
+        testImg.onerror = () => { img.src = ''; img.style.display = 'none'; cap.textContent = (st.text || meta.text) + ' ' + meta.fallback; };
+        testImg.src = meta.src;
+      } else {
+        img.src = ''; img.style.display = 'none';
+      }
+
+      box.style.display = 'flex';
+      if (stickerTimer) clearTimeout(stickerTimer);
+      stickerTimer = setTimeout(() => { box.style.display = 'none'; }, 5000);
+    }
+
+    // ======== STT: 브라우저 Web Speech API (final-only) + Whisper 폴백 ========
+    const micBtn = document.getElementById('micBtn');
+    const textArea = document.querySelector('textarea[name="message"]');
+
+    let rec;
+    let usingWebAPI = false;
+    let capturing = false;
+
+    let commitBuf = "";
+    let baseAtStart = "";
+
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+    if (SR) {
+      rec = new SR();
+      rec.lang = 'ko-KR';
+      rec.interimResults = false;
+      rec.continuous = true;
+
+      rec.onstart = () => {
+        usingWebAPI = true;
+        capturing = true;
+        micBtn.textContent = '🛑 멈추기';
+        baseAtStart = (textArea?.value || '').trim();
+        commitBuf = baseAtStart;
+      };
+
+      rec.onresult = (e) => {
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          const res = e.results[i];
+          if (!res.isFinal) continue;
+          const piece = (res[0]?.transcript || "").trim();
+          if (!piece) continue;
+          if (commitBuf && !commitBuf.endsWith(' ')) commitBuf += ' ';
+          commitBuf += piece;
+        }
+        if (textArea) textArea.value = commitBuf;
+      };
+
+      rec.onerror = (e) => {
+        console.warn('SpeechRecognition error', e);
+        usingWebAPI = false;
+        capturing = false;
+        micBtn.textContent = '🎤 말하기';
+        if (textArea) textArea.value = commitBuf;
+        stopMediaRecording();
+      };
+
+      rec.onend = () => {
+        if (textArea) textArea.value = commitBuf;
+        capturing = false;
+        micBtn.textContent = '🎤 말하기';
+      };
+    }
+
+    // ---- Whisper 폴백 (/stt)
+    let mediaStream = null;
+    let mediaRecorder = null;
+    let chunks = [];
+
+    async function startMediaRecording() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert('이 브라우저는 마이크 접근을 지원하지 않습니다.');
+        return;
+      }
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(mediaStream, { mimeType: 'audio/webm' });
+        chunks = [];
+
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) chunks.push(e.data);
+        };
+        mediaRecorder.onstop = async () => {
+          const blob = new Blob(chunks, { type: 'audio/webm' });
+          chunks = [];
+          const fd = new FormData();
+          fd.append('audio', blob, 'speech.webm');
+          try {
+            const res = await fetch('/stt', { method: 'POST', body: fd });
+            const data = await res.json();
+            if (data && data.ok && data.text) {
+              const prev = (textArea.value || '').trim();
+              textArea.value = prev ? (prev + ' ' + data.text) : data.text;
+            } else {
+              alert('음성 인식 실패: ' + (data && data.error ? data.error : 'unknown'));
+            }
+          } catch (err) {
+            console.warn('STT upload error', err);
+            alert('네트워크 오류로 음성 인식에 실패했습니다.');
+          } finally {
+            if (mediaStream) mediaStream.getTracks().forEach(t => t.stop());
+            mediaStream = null;
+            mediaRecorder = null;
+          }
+        };
+
+        mediaRecorder.start();
+        capturing = true;
+        micBtn.textContent = '🛑 멈추기';
+      } catch (err) {
+        console.warn('getUserMedia error', err);
+        alert('마이크 접근을 허용해 주세요.');
+      }
+    }
+
+    function stopMediaRecording() {
+      try { if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop(); } catch (e) {}
+      try { if (mediaStream) mediaStream.getTracks().forEach(t => t.stop()); } catch (e) {}
+      mediaRecorder = null;
+      mediaStream = null;
+      capturing = false;
+      micBtn.textContent = '🎤 말하기';
+    }
+
+    if (micBtn) {
+      micBtn.addEventListener('click', async () => {
+        if (!{{ 'true' if consent_ok else 'false' }}) {
+          alert('데이터 동의 후 음성 입력을 사용할 수 있습니다.');
+          return;
+        }
+        if (capturing) {
+          if (usingWebAPI && rec) { try { rec.stop(); } catch(e) {} }
+          else { stopMediaRecording(); }
+          return;
+        }
+        if (rec) {
+          try { rec.start(); return; } catch (e) {
+            console.warn('SpeechRecognition start failed, fallback to MediaRecorder', e);
+            usingWebAPI = false;
+          }
+        }
+        await startMediaRecording();
+      });
+    }
+
+    // 초기 적용
+    applyConsentGuard();
+    refreshEmotionPanel();
+    setInterval(refreshEmotionPanel, 3000);
+
+    const chat = document.getElementById('chat-window');
+    if (chat) chat.scrollTop = chat.scrollHeight;
+  </script>
+</body>
+</html>

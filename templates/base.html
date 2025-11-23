@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <header class="topbar">
+  <div class="container topbar-row auth-links">
+    {% if session.auth_email %}
+      <span style="color:#64748b">안녕하세요, {{ session.auth_email }}</span>
+      <a href="{{ url_for('logout') }}">로그아웃</a>
+    {% else %}
+      <a href="{{ url_for('login') }}">로그인</a>
+      <span style="color:#cbd5e1">/</span>
+      <a href="{{ url_for('register') }}">회원가입</a>
+    {% endif %}
+  </div>
+</header>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ title or "마음온(心) – 심리 분석 & 상담" }}</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css" />
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+</head>
+<body class="theme">
+  <header class="navbar">
+    <div class="nav-left">
+      <a class="brand" href="/">마음온(心)</a>
+      <nav class="nav-links">
+        <a href="/">감정 분석</a>
+        <a href="/chatbot">상담 챗봇</a>
+      </nav>
+    </div>
+    <div class="nav-right">
+      <button id="themeToggle" class="btn ghost" title="라이트/다크 전환">🌓</button>
+    </div>
+  </header>
+
+  <main class="container">
+    {% with msg = get_flashed_messages() %}
+      {% if msg %}
+        <div class="toast">{{ msg[0] }}</div>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    <small>ⓒ {{ 2025 }} 마음온(心) • 익명·비판단·안전</small>
+  </footer>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

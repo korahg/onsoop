@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>상담 기록 · 회차 목록 · 마음온(心)</title>
+  <style>
+    :root { --bg-color:#ffffff; --text-color:#1f2937; --muted-color:#6b7280; --border-color:#e5e7eb; --accent-color:#3b82f6; --panel-bg:#f9fafb; }
+    *{box-sizing:border-box} body{margin:0;background:var(--bg-color);color:var(--text-color);font-family:'Pretendard',system-ui,-apple-system,Segoe UI,Roboto,'Noto Sans KR',sans-serif}
+    .wrap{max-width:960px;margin:40px auto;padding:0 16px}
+    .header-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+    h1{font-size:28px;margin:0}
+    .subtitle{color:var(--muted-color)}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+    .card{background:var(--panel-bg);border:1px solid var(--border-color);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:8px}
+    .title{font-weight:700}
+    .muted{color:var(--muted-color);font-size:13px}
+    a.btn{display:inline-flex;align-items:center;justify-content:center;height:38px;padding:0 14px;border-radius:12px;background:var(--accent-color);color:white;text-decoration:none;font-weight:700}
+    .toolbar{display:flex;gap:8px}
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="wrap">
+    <div class="header-bar">
+      <div>
+        <h1>상담 기록</h1>
+        <div class="subtitle">회차별로 지난 대화를 볼 수 있어요.</div>
+      </div>
+      <div class="toolbar">
+        <a class="btn" href="{{ url_for('new_chat') }}">＋ 새 상담 시작</a>
+      </div>
+    </div>
+
+    {% if not sessions %}
+      <p class="muted">아직 상담 기록이 없습니다.</p>
+    {% else %}
+      <div class="grid">
+        {% for sid, started_at, title, msg_count, first_at, last_at in sessions %}
+          <a class="card" href="{{ url_for('history_session_detail', session_id=sid) }}">
+            <div class="title">{{ loop.index }}회차 {{ title and "· " ~ title }}</div>
+            <div class="muted">{{ started_at }} 시작</div>
+            <div class="muted">메시지 {{ msg_count }}개</div>
+            {% if first_at and last_at %}
+              <div class="muted">{{ first_at }} ~ {{ last_at }}</div>
+            {% endif %}
+          </a>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</body>
+</html>

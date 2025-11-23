@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Emotion App</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+
+<body>
+  <div class="app">
+    <!-- Left: Chat -->
+    <section class="card chat">
+      <div class="chat-header">
+        <h2>심리 상담 챗봇</h2>
+        <span class="badge ok" id="status">준비됨</span>
+      </div>
+      <div class="messages" id="messages">
+        <div class="msg bot">
+          안녕하세요. 요즘 마음 상태를 함께 정리해볼게요. 편하게 말씀해 주세요.
+          <div class="meta">상담 시작</div>
+        </div>
+      </div>
+      <form class="inputbar" id="chat">
+        <input type="text" name="message" id="message" placeholder="무엇이 고민이신가요?" required />
+        <button type="submit">보내기</button>
+        <div style="display:flex;flex-direction:column;gap:4px; margin-left:8px">
+          <label><input type="checkbox" name="store_raw" value="1" /> 동의(암호화 저장)</label>
+          <select name="retain_days" style="font-size:12px">
+            <option value="90">보관 90일</option>
+            <option value="365">보관 1년</option>
+          </select>
+        </div>
+      </form>
+    </section>
+
+    <!-- Right: Analysis -->
+    <aside class="card panel">
+      <div class="panel-header"><h3 style="margin:0">분석 대시보드</h3></div>
+
+      <div class="panel-section" id="summaryBox">
+        <div class="row">
+          <div><b>현재 요약</b></div>
+          <div id="sentimentBadge" class="badge">-</div>
+        </div>
+        <p id="summaryText" style="margin:8px 0 0 0;color:var(--muted)">아직 분석 결과가 없습니다.</p>
+      </div>
+
+
+      <div class="panel-section">
+      <div class="row"><b>상위 감정</b><span id="topEmo"></span></div>
+      <div class="bars" id="emotionBars"></div>
+    </div>
+
+
+    <div class="panel-section">
+      <div class="row"><b>최근 대화 요약</b><span class="muted" style="font-size:12px;color:var(--muted)">최근 10건</span></div>
+      <ul class="timeline" id="timeline"></ul>
+    </div>
+  </aside>
+</div>
+
+<script>
+  // DOM 준비 확인
+  document.addEventListener('DOMContentLoaded', () => {
+    const $ = (sel)=>document.querySelector(sel);
+    const messages = $('#messages');
+    const chatForm = $('#chat');
+    const msgInput = $('#message');
+    const bars = $('#emotionBars');
+    const summaryText = $('#summaryText');
+    const sentimentBadge = $('#sentimentBadge');
+    const topEmo = $('#topEmo');
+    const timeline = $('#timeline');
+    const statusBadge = $('#status');
+
+    function addMsg(text, who='user'){
+      const el = document.createElement('div');
+      el.className = `msg ${who==='user'?'user':'bot'}`;
+      el.innerHTML = (text||'').toString().replace(/\n/g,'<br/>');
+      messages.appendChild(el);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function setSentimentBadge(sent){
+      sentimentBadge.textContent = sent || '-';
+      sentimentBadge.className = 'badge ' + (sent==='긍정'?'ok':(sent==='부정'?'bad':'')); 
+    }
+
+    function renderBars(emotions){
+      bars.innerHTML='';
+      const entries = Object.entries(emotions||{}).sort((a,b)=>b[1]-a[1]);
+      entries.forEach(([k,v])=>{
+        const row = document.createElement('div');
+        row.innerHTML = `<div class="row"><span>${k}</span><span>${Math.round(v*100)}%</span></div>`;
+        const barWrap = document.createElement('div');
+        barWrap.className='bar';
+        const span=document.createElement('span');
+        span.style.width = (v*100).toFixed(0)+'%';
+        barWrap.appendChild(span);
+        bars.appendChild(row);bars.appendChild(barWrap);
+      });
+      topEmo.textContent = entries.slice(0,3).map(([k])=>k).join(', ');
+    }
+
+    async function loadTimeline(){
+      try{
+        const res = await fetch('/history?limit=10', {headers:{'Accept':'application/json'}});
+        if(!res.ok) throw new Error('history '+res.status);
+        const data = await res.json();
+        timeline.innerHTML='';
+        data.forEach(item=>{
+          const li=document.createElement('li');
+          li.innerHTML = `<div style="font-size:13px"><b>${item.sentiment||'-'}</b> · ${new Date(item.created_at).toLocaleString()}</div>
+                          <div style="color:var(--muted);font-size:13px">${item.summary||''}</div>`;
+          timeline.appendChild(li);
+        });
+      }catch(e){ console.error(e); }
+    }
+
+    chatForm.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const text = msgInput.value.trim();
+      if(!text) return;
+
+      // 버튼 잠깐 비활성화
+      const btn = chatForm.querySelector('button[type="submit"]');
+      btn.disabled = true; statusBadge.textContent = '보내는 중...';
+
+      // 화면에 유저 메세지 추가
+      addMsg(text,'user');
+
+      // 전송
+      const fd = new FormData(chatForm);
+      try{
+        const res = await fetch('/chat', { method:'POST', body: fd, headers:{'Accept':'application/json'}});
+        if(!res.ok){
+          const t = await res.text();
+          addMsg('오류('+res.status+'): '+t, 'bot');
+        }else{
+          const data = await res.json();
+          addMsg(data.reply || '(응답 없음)','bot');
+          if(data.analysis){
+            setSentimentBadge(data.analysis.sentiment);
+            summaryText.textContent = data.analysis.summary || '';
+            renderBars(data.analysis.emotions);
+            loadTimeline();
+          }
+        }
+      }catch(err){
+        console.error(err);
+        addMsg('서버와 통신 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.','bot');
+      }finally{
+        btn.disabled = false; statusBadge.textContent = '준비됨';
+        msgInput.value=''; msgInput.focus();
+      }
+    });
+
+    loadTimeline();
+  });
+</script>
+
+
+</body>
+</html>

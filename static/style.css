@@ -1,0 +1,181 @@
+:root{--bg:#f7f8fa;--card:#ffffff;--text:#111;--muted:#6b7280;--primary:#2563eb;--ok:#16a34a;--bad:#ef4444;--border:#e5e7eb}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif}
+.app{display:grid;grid-template-columns:1.15fr 0.85fr;gap:16px;max-width:1200px;margin:24px auto;padding:0 16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:0 4px 14px rgba(0,0,0,.05)}
+
+
+/* Left: Chat */
+.chat{display:flex;flex-direction:column;height:78vh}
+.chat-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.chat-header h2{font-size:18px;margin:0}
+.messages{padding:16px;overflow:auto;flex:1}
+.msg{max-width:78%;padding:10px 12px;border-radius:12px;margin:8px 0;line-height:1.4}
+.user{background:#e8f0ff;margin-left:auto}
+.bot{background:#f3f4f6}
+.meta{font-size:12px;color:var(--muted);margin-top:4px}
+
+
+.inputbar{border-top:1px solid var(--border);padding:8px;display:flex;gap:8px;align-items:center}
+.inputbar input[type="text"]{flex:1;padding:12px 12px;border:1px solid var(--border);border-radius:10px}
+.inputbar button{padding:10px 14px;border:none;background:var(--primary);color:#fff;border-radius:10px;cursor:pointer}
+.inputbar label{font-size:12px;color:var(--muted)}
+
+
+/* Right: Analysis */
+.panel{display:flex;flex-direction:column;height:78vh}
+.panel-header{padding:12px 16px;border-bottom:1px solid var(--border)}
+.panel-section{padding:14px 16px;border-bottom:1px dashed var(--border)}
+.bars{display:flex;flex-direction:column;gap:10px}
+.bar{height:12px;background:#eef2ff;border-radius:999px;overflow:hidden}
+.bar>span{display:block;height:100%;background:var(--primary)}
+.row{display:flex;justify-content:space-between;align-items:center;font-size:14px}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px}
+.badge.ok{background:#dcfce7;color:#166534}
+.badge.bad{background:#fee2e2;color:#991b1b}
+.timeline{list-style:none;padding:0;margin:0;max-height:220px;overflow:auto}
+.timeline li{padding:8px 0;border-bottom:1px solid var(--border)}
+.kv{display:flex;gap:8px;flex-wrap:wrap}
+.kv .pill{background:#f1f5f9;border:1px solid var(--border);padding:4px 8px;border-radius:999px;font-size:12px}
+
+
+@media(max-width:1024px){.app{grid-template-columns:1fr}.panel{height:auto}.chat{height:auto}}
+
+/* ======= Topbar ======= */
+.topbar {
+  background: transparent;
+  padding: 10px 0;
+}
+.container {
+  width: min(1000px, 92%);
+  margin: 0 auto;           /* 가운데 정렬 컨테이너 */
+}
+.topbar-row {
+  display: flex;
+  justify-content: flex-end; /* 오른쪽 정렬 핵심 */
+  align-items: center;
+  gap: 12px;
+}
+.auth-links a {
+  text-decoration: none;
+  color: #334155;
+  font-weight: 600;
+}
+.auth-links a:hover {
+  text-decoration: underline;
+}
+
+/* ======= Auth Card ======= */
+:root { --brand: #6C63FF; }
+body {
+  background: #f8fafc;
+  color: #0f172a;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", "Helvetica Neue", Arial, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+}
+.auth-wrap {
+  width: min(420px, 92%);
+  margin: 56px auto;
+}
+.auth-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(2,6,23,.07);
+  padding: 28px;
+}
+.auth-title {
+  font-size: 22px; font-weight: 800; margin: 2px 0 14px;
+}
+.auth-sub {
+  color:#64748b; margin-bottom: 18px; font-size: 14px;
+}
+.form-row { margin-bottom: 14px; }
+.form-row label { display:block; font-size:14px; color:#334155; margin-bottom:6px; font-weight:600; }
+.input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  outline: none;
+}
+.input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(108,99,255,.15); }
+.btn-primary {
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  border-radius: 12px;
+  background: var(--brand);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-primary:hover { filter: brightness(0.95); }
+.auth-footer {
+  margin-top: 14px; font-size: 14px; color:#64748b; text-align:center;
+}
+.auth-footer a { color:#334155; font-weight:700; text-decoration:none; }
+.auth-footer a:hover { text-decoration:underline; }
+.error {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+/* ===== 페이지 액션 바 (제목 위 우측) ===== */
+.page-actions{
+  display:flex;
+  justify-content:flex-end;   /* 우측 정렬 핵심 */
+  align-items:center;
+  gap:12px;
+  margin:8px 0 12px;          /* 제목과 간격 */
+}
+
+/* 인사 텍스트 (로그인 상태) */
+.greet{
+  color:#64748b;
+  font-size:14px;
+}
+
+/* 버튼 기본 */
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:10px 14px;
+  border-radius:9999px;       /* pill */
+  font-weight:700;
+  text-decoration:none;
+  border:1px solid #e5e7eb;
+  transition:transform .06s ease, background .2s ease, border-color .2s ease;
+  user-select:none;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn:active{ transform:translateY(1px); }
+
+/* 은은한 회색(로그인) */
+.btn.ghost{
+  background:#f1f5f9;
+  color:#334155;
+}
+.btn.ghost:hover{
+  background:#e2e8f0;
+}
+
+/* 강조 초록(회원가입) — 브랜드 색 바꾸고 싶으면 여기 변경 */
+.btn.solid{
+  background:#10b981;
+  color:#fff;
+  border-color:transparent;
+}
+.btn.solid:hover{
+  filter:brightness(.97);
+}
+
+/* 반응형: 모바일에서 인사문구는 감춤 */
+@media (max-width:640px){
+  .greet{ display:none; }
+  .page-actions{ gap:8px; }
+}

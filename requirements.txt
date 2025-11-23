@@ -1,0 +1,12 @@
+transformers
+torch
+pandas
+scikit-learn
+openpyxl
+evaluate
+imbalanced-learn
+matplotlib
+seaborn
+Flask>=3
+python-dotenv>=1
+cryptography>=42

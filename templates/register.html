@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <title>회원가입</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-title">회원가입</div>
+      <div class="auth-sub">이메일과 비밀번호를 입력해 주세요</div>
+
+      {% if error %}<div class="error">{{ error }}</div>{% endif %}
+
+      <form method="post">
+        <div class="form-row">
+          <label for="email">이메일</label>
+        <input class="input" id="email" type="email" name="email" required>
+        </div>
+        <div class="form-row">
+          <label for="password">비밀번호 (8자 이상)</label>
+          <input class="input" id="password" type="password" name="password" minlength="8" required>
+        </div>
+        <button class="btn-primary" type="submit">가입하기</button>
+      </form>
+
+      <div class="auth-footer">
+        이미 계정이 있나요? <a href="{{ url_for('login') }}">로그인</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

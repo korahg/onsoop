@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>심리 변화 리포트 · 마음온(心)</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <style>
+    :root { --bg-color: #ffffff; --text-color: #1f2937; --muted-color: #6b7280; --border-color: #e5e7eb; }
+    body { margin: 0; background-color: var(--bg-color); color: var(--text-color); font-family: 'Pretendard', sans-serif; }
+    .wrap { max-width: 1024px; margin: 40px auto; padding: 0 16px; }
+    .header-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    h1 { font-size: 32px; margin: 0 0 8px; }
+    .subtitle { color: var(--muted-color); }
+    .card { background-color: #f9fafb; border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+    .chart-container { height: 60vh; }
+    button { padding: 0 20px; cursor: pointer; border: none; border-radius: 12px; font-size: 14px; font-weight: 500; background-color: #e5e7eb; color: #374151; height: 40px; }
+    .empty-state { text-align: center; padding: 4rem 2rem; }
+    .empty-state .icon { font-size: 3rem; margin-bottom: 1rem; }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="wrap">
+    <div class="header-bar">
+      <div>
+        <h1>심리 변화 리포트</h1>
+        <div class="subtitle">시간에 따른 감정 변화 추이를 확인해보세요.</div>
+      </div>
+      <div>
+        <button type="button" onclick="location.href='/chatbot'">상담 계속하기</button>
+      </div>
+    </div>
+    <div class="card">
+      {% if chart_data and chart_data != '{}' %}
+        <div class="chart-container">
+          <canvas id="emotionChart"></canvas>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <div class="icon">📊</div>
+          <h2 class="text-xl font-semibold">데이터가 아직 부족해요</h2>
+          <p class="text-slate-500 mt-2">챗봇과 대화를 나누면 감정 변화 그래프가 여기에 표시됩니다.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <script>
+    const chartData = {{ chart_data|safe }} || {};
+    if (chartData.labels && chartData.labels.length) {
+      const ctx = document.getElementById('emotionChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: chartData.labels,
+          datasets: chartData.datasets
+        },
+        options: {
+          responsive: true,
+          scales: { y: { min: 0, max: 1 } }
+        }
+      });
+    } else {
+      document.getElementById('emptyHint').style.display = 'block';
+    }
+  </script>
+
+</body>
+</html>
+
