@@ -11,3 +11,4 @@ Flask>=3
 python-dotenv>=1
 cryptography>=42
 gunicorn
+openai>=1.0.0
