@@ -10,3 +10,4 @@ seaborn
 Flask>=3
 python-dotenv>=1
 cryptography>=42
+gunicorn
