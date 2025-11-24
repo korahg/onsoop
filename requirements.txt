@@ -1,14 +1,14 @@
-transformers
-torch
-pandas
-scikit-learn
-openpyxl
-evaluate
-imbalanced-learn
-matplotlib
-seaborn
 Flask>=3
 python-dotenv>=1
 cryptography>=42
-gunicorn
 openai>=1.0.0
+numpy
+
+pandas
+scikit-learn
+openpyxl
+# 아래 애들은 전부 "학습/분석용"이라 빼도 됩니다 (원하면 남겨도 됨)
+# evaluate
+# imbalanced-learn
+# matplotlib
+# seaborn
