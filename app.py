@@ -284,7 +284,7 @@ def save_emotion_log(user_id: str, emotions: dict):
 # ---- 라우트: 홈/챗봇
 @app.route("/")
 def index():
-    return redirect(url_for("chatbot"))
+    return chatbot()
 
 @app.route("/chatbot", methods=["GET", "POST"])
 def chatbot():
