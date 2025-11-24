@@ -7,6 +7,7 @@ numpy
 pandas
 scikit-learn
 openpyxl
+gunicorn
 # 아래 애들은 전부 "학습/분석용"이라 빼도 됩니다 (원하면 남겨도 됨)
 # evaluate
 # imbalanced-learn
